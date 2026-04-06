@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import joblib
 import plotly.graph_objects as go
+import time
 
 
 st.set_page_config(page_title="Fraud Detection", page_icon="💳", layout="wide")
-
 
 @st.cache_resource
 def load_objects():
@@ -15,98 +15,167 @@ def load_objects():
 
 model, preprocessor = load_objects()
 
+# -----------------------------
+# DARK THEME + ANIMATION CSS
+# -----------------------------
 st.markdown("""
 <style>
+
+body {
+    background-color: #0f172a;
+    color: white;
+}
+
+/* Title */
 .title {
-    font-size: 36px;
+    font-size: 40px;
     font-weight: bold;
-    color: #1f77b4;
-}
-.card {
-    padding: 15px;
-    border-radius: 12px;
-    background-color: #f1f5f9;
     text-align: center;
+    color: #38bdf8;
+    animation: fadeIn 1s ease-in;
 }
+
+/* Cards */
+.card {
+    background: rgba(30, 41, 59, 0.8);
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(56,189,248,0.2);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+/* Button */
+.stButton>button {
+    background: linear-gradient(90deg, #38bdf8, #6366f1);
+    color: white;
+    border-radius: 10px;
+    height: 3em;
+    width: 100%;
+    font-size: 16px;
+    border: none;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* Pulse for fraud alert */
+.pulse {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {box-shadow: 0 0 10px red;}
+    50% {box-shadow: 0 0 25px red;}
+    100% {box-shadow: 0 0 10px red;}
+}
+
 </style>
 """, unsafe_allow_html=True)
 
+# -----------------------------
+# TITLE
+# -----------------------------
+st.markdown('<div class="title">💳 AI Fraud Detection System</div>', unsafe_allow_html=True)
+st.write("")
 
-st.markdown('<div class="title">💳 Fraud Detection Dashboard</div>', unsafe_allow_html=True)
+# -----------------------------
+# LAYOUT
+# -----------------------------
+left, right = st.columns([1, 2])
 
+# -----------------------------
+# INPUT PANEL
+# -----------------------------
+with left:
+    st.subheader("🔧 Transaction Input")
 
-st.sidebar.header("Transaction Details")
+    amount = st.number_input("Amount", 0.0, 100000.0, 100.0)
+    transaction_hour = st.slider("Hour", 0, 23, 12)
+    foreign_transaction = st.selectbox("Foreign", [0, 1])
+    location_mismatch = st.selectbox("Location Mismatch", [0, 1])
+    device_trust_score = st.slider("Device Trust", 0.0, 1.0, 0.8)
+    velocity_last_24h = st.number_input("Transactions (24h)", 0, 100, 5)
+    cardholder_age = st.slider("Age", 18, 90, 30)
+    merchant_category = st.selectbox(
+        "Category",
+        ["grocery", "electronics", "fashion", "travel", "others"]
+    )
 
-amount = st.sidebar.number_input("Amount", 0.0, 100000.0, 100.0)
-transaction_hour = st.sidebar.slider("Hour", 0, 23, 12)
-foreign_transaction = st.sidebar.selectbox("Foreign", [0, 1])
-location_mismatch = st.sidebar.selectbox("Location Mismatch", [0, 1])
-device_trust_score = st.sidebar.slider("Device Trust", 0.0, 1.0, 0.8)
-velocity_last_24h = st.sidebar.number_input("Transactions (24h)", 0, 100, 5)
-cardholder_age = st.sidebar.slider("Age", 18, 90, 30)
-merchant_category = st.sidebar.selectbox(
-    "Category",
-    ["grocery", "electronics", "fashion", "travel", "others"]
-)
+    predict_btn = st.button("🚀 Analyze Transaction")
 
+# -----------------------------
+# OUTPUT PANEL
+# -----------------------------
+with right:
 
-input_data = pd.DataFrame({
-    'amount': [amount],
-    'transaction_hour': [transaction_hour],
-    'foreign_transaction': [foreign_transaction],
-    'location_mismatch': [location_mismatch],
-    'device_trust_score': [device_trust_score],
-    'velocity_last_24h': [velocity_last_24h],
-    'cardholder_age': [cardholder_age],
-    'merchant_category': [merchant_category]
-})
+    if predict_btn:
 
+        # Simulate real-time processing
+        with st.spinner("Analyzing transaction..."):
+            time.sleep(1.5)
 
-if st.sidebar.button("🔍 Predict"):
+        input_data = pd.DataFrame({
+            'amount': [amount],
+            'transaction_hour': [transaction_hour],
+            'foreign_transaction': [foreign_transaction],
+            'location_mismatch': [location_mismatch],
+            'device_trust_score': [device_trust_score],
+            'velocity_last_24h': [velocity_last_24h],
+            'cardholder_age': [cardholder_age],
+            'merchant_category': [merchant_category]
+        })
 
-    input_transformed = preprocessor.transform(input_data)
+        input_transformed = preprocessor.transform(input_data)
 
-    pred = model.predict(input_transformed)[0]
+        pred = model.predict(input_transformed)[0]
 
-    try:
-        prob = model.predict_proba(input_transformed)[0][1]
-    except:
-        prob = 0.5
+        try:
+            prob = model.predict_proba(input_transformed)[0][1]
+        except:
+            prob = 0.5
 
+        # KPI CARDS
+        c1, c2, c3 = st.columns(3)
 
-    col1, col2, col3 = st.columns(3)
+        with c1:
+            st.markdown(f'<div class="card">💰<h4>Amount</h4><h2>{amount}</h2></div>', unsafe_allow_html=True)
 
-    with col1:
-        st.markdown(f'<div class="card"><h4>💰 Amount</h4><h2>{amount}</h2></div>', unsafe_allow_html=True)
+        with c2:
+            st.markdown(f'<div class="card">📊<h4>Risk</h4><h2>{round(prob*100,2)}%</h2></div>', unsafe_allow_html=True)
 
-    with col2:
-        st.markdown(f'<div class="card"><h4>📊 Risk</h4><h2>{round(prob*100,2)}%</h2></div>', unsafe_allow_html=True)
+        with c3:
+            st.markdown(f'<div class="card">📱<h4>Trust</h4><h2>{device_trust_score}</h2></div>', unsafe_allow_html=True)
 
-    with col3:
-        st.markdown(f'<div class="card"><h4>📱 Trust</h4><h2>{device_trust_score}</h2></div>', unsafe_allow_html=True)
+        st.write("")
 
-    st.write("")
+        # GAUGE
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=prob * 100,
+            title={'text': "Fraud Probability"},
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "#38bdf8"},
+                'steps': [
+                    {'range': [0, 30], 'color': "#22c55e"},
+                    {'range': [30, 70], 'color': "#eab308"},
+                    {'range': [70, 100], 'color': "#ef4444"}
+                ]
+            }
+        ))
 
+        st.plotly_chart(fig, use_container_width=True)
 
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=prob * 100,
-        title={'text': "Fraud Probability"},
-        gauge={
-            'axis': {'range': [0, 100]},
-            'bar': {'color': "black"},
-            'steps': [
-                {'range': [0, 30], 'color': "green"},
-                {'range': [30, 70], 'color': "yellow"},
-                {'range': [70, 100], 'color': "red"}
-            ]
-        }
-    ))
-
-    st.plotly_chart(fig, use_container_width=True)
-    
-
-    if pred == 1:
-        st.error(" Fraud Detected")
-    else:
-        st.success(" Legit Transaction")
+        # RESULT
+        if pred == 1:
+            st.markdown('<div class="pulse">🚨 FRAUD DETECTED</div>', unsafe_allow_html=True)
+        else:
+            st.success("✅ Legit Transaction")
