@@ -68,19 +68,23 @@ class ModelTrainer:
 
             best_model = models[best_model_name]
 
-            best_model.fit(X_train, y_train)
+            from imblearn.pipeline import Pipeline
+            from imblearn.over_sampling import SMOTE
 
-            if best_model_score < 0.6:
-                print("Warning: Low accuracy, but using best available model")
+            pipeline = Pipeline([
+                ("smote", SMOTE(random_state=42)),
+                ("model", best_model)
+            ])
 
-            logging.info(f"Best model found: {best_model_name}")
+           
+            pipeline.fit(X_train, y_train)
 
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
-                obj=best_model
+                obj=pipeline
             )
 
-            predicted = best_model.predict(X_test)
+            predicted = pipeline.predict(X_test)
 
             accuracy = accuracy_score(y_test, predicted)
 
