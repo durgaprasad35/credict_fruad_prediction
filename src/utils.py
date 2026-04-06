@@ -9,7 +9,7 @@ from sklearn.metrics import r2_score
 
 from src.exception import CustomException
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score , precision_score,recall_score,confusion_matrix
 def save_object(file_path, obj):
     try:
         dir_path = os.path.dirname(file_path)
@@ -34,11 +34,19 @@ def evaluate_models(X_train, y_train, X_test, y_test, models):
             y_test_pred = model.predict(X_test)
 
             train_model_score = accuracy_score(y_train, y_train_pred)
-            test_model_score = accuracy_score(y_test, y_test_pred)
-
+            test_model_score = accuracy_score(y_test, y_test_pred) 
+            train_model_precision = precision_score(y_test,y_test_pred) 
+            train_model_recall = recall_score(y_test,y_test_pred) 
+            cm_mat = confusion_matrix(y_test, y_test_pred)
+            
             report[model_name] = test_model_score
 
-            print(f"{model_name}: Train Accuracy = {train_model_score:.4f}, Test Accuracy = {test_model_score:.4f}")
+            print(f"{model_name}: Train Accuracy = {train_model_score:.4f}, Test Accuracy = {test_model_score:.4f}") 
+            print(f"{model_name}: Train precision = {train_model_score:.4f}, Test precision = {test_model_score:.4f}") 
+            print(f"{model_name}: Train recall = {train_model_score:.4f}, Test recall = {test_model_score:.4f}") 
+            print(cm_mat)
+
+
 
         return report
 

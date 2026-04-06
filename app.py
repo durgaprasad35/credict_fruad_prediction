@@ -104,9 +104,9 @@ if st.sidebar.button("🔍 Predict"):
     ))
 
     st.plotly_chart(fig, use_container_width=True)
-
+    
 
     if pred == 1:
-        st.error("🚨 Fraud Detected")
+        st.error(" Fraud Detected")
     else:
-        st.success("✅ Legit Transaction")
+        st.success(" Legit Transaction")
