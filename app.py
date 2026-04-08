@@ -377,4 +377,6 @@ df = fetch_transactions()
 if not df.empty:
     st.dataframe(df, use_container_width=True)
 else:
-    st.info("No transactions yet")
+    st.info("No transactions yet") 
+st.line_chart(df['probability'])
+st.bar_chart(df['merchant_category'].value_counts())
